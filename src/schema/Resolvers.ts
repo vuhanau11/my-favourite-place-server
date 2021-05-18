@@ -80,7 +80,7 @@ export const resolvers = {
           return responseOAuth(newUser)
         }
         return new Promise((resolve, reject) => {
-          models.Customer.update(
+          models.User.update(
             { firstName, lastName, avatar },
             {
               returning: true,
