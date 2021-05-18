@@ -1,7 +1,6 @@
 import { IUser } from '../models/user'
 import { STATUS_PLACE } from '../models/place'
 import Sequelize from 'sequelize'
-import bcrypt from 'bcrypt'
 import jsonwebtoken from 'jsonwebtoken'
 
 const op = Sequelize.Op
@@ -15,26 +14,18 @@ const responseOAuth = (user: IUser) => {
   return { token, user }
 }
 
-const checkHasLogin = (user: IUser) => {
-  if (!user) throw new Error('Bạn chưa đăng nhập')
-}
-
 export const resolvers = {
   Query: {
     async me(_, _args: { id: string }, { user, models }) {
-      checkHasLogin(user)
       return await models.User.findByPk(user?.id)
     },
-    async getAllUsers(_, _args: IUser, { user, models }) {
-      checkHasLogin(user)
+    async getAllUsers(_, _args: IUser, { models }) {
       return models.User.findAll()
     },
-    async getDetailUser(_, args: { id: string }, { user, models }) {
-      checkHasLogin(user)
+    async getDetailUser(_, args: { id: string }, { models }) {
       return models.User.findByPk(args?.id)
     },
-    async getPlaceByUser(_, args, { user, models }) {
-      checkHasLogin(user)
+    async getPlaceByUser(_, args, { models }) {
       const { userId } = args?.input
       return models.Place.findAll({
         where: {
@@ -42,8 +33,7 @@ export const resolvers = {
         },
       })
     },
-    async getAllPlaces(_, args, { user, models }) {
-      checkHasLogin(user)
+    async getAllPlaces(_, args, { models }) {
       const { name, page, pageSize } = args?.input
       return models.Place.findAll({
         limit: pageSize,
@@ -54,15 +44,13 @@ export const resolvers = {
         },
       })
     },
-    async getDetailPlace(_, args: { id: string }, { user, models }) {
-      checkHasLogin(user)
+    async getDetailPlace(_, args: { id: string }, { models }) {
       return models.Place.findByPk(args?.id)
     },
   },
 
   Mutation: {
-    async createPlace(_, args, { user, models }) {
-      checkHasLogin(user)
+    async createPlace(_, args, { models }) {
       const { name, description, longitude, latitude, status, userId } =
         args?.input
 
@@ -82,22 +70,28 @@ export const resolvers = {
         userId,
       })
     },
-    async login(_, args, { models }) {
+
+    async login(_, args: { input: IUser }, { models }) {
       try {
-        const { email, password } = args?.input
+        const { email, firstName, lastName, avatar } = args?.input
         const user = await models?.User?.findOne({ where: { email } })
         if (!user) {
-          const newUser = await models.User.create({
-            email,
-            password: bcrypt.hashSync(password, 10),
-          })
+          const newUser = await models.User.create({ email, firstName, lastName, avatar })
           return responseOAuth(newUser)
         }
-        const isValid = await bcrypt.compare(password, user.password)
-        if (!isValid) {
-          throw new Error('Sai mật khẩu')
-        }
-        return responseOAuth(user)
+        return new Promise((resolve, reject) => {
+          models.Customer.update(
+            { firstName, lastName, avatar },
+            {
+              returning: true,
+              where: { id: user.id }
+            }
+          ).then(() => {
+            resolve(responseOAuth(user))
+          }).catch((error) => {
+            reject(error)
+          })
+        })
       } catch (error) {
         throw new Error(error.message)
       }

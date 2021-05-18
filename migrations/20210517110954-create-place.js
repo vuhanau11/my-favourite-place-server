@@ -15,10 +15,10 @@ module.exports = {
         type: Sequelize.TEXT,
       },
       longitude: {
-        type: Sequelize.STRING,
+        type: Sequelize.FLOAT,
       },
       latitude: {
-        type: Sequelize.STRING,
+        type: Sequelize.FLOAT,
       },
       status: {
         type: Sequelize.INTEGER,

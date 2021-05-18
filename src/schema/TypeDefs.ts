@@ -5,7 +5,9 @@ export const typeDefs = gql`
 
   input LoginInput {
     email: String!
-    password: String!
+    firstName: String
+    lastName: String
+    avatar: String
   }
 
   input CreatePlaceInput {
@@ -32,7 +34,6 @@ export const typeDefs = gql`
     firstName: String
     lastName: String
     email: String
-    password: String
     avatar: String
     createdAt: Date!
     updatedAt: Date!
@@ -54,6 +55,7 @@ export const typeDefs = gql`
     createdAt: Date!
     updatedAt: Date!
   }
+  
   type Query {
     getAllUsers: [User!]!
     getDetailUser(id: ID!): User
