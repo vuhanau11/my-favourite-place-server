@@ -15,6 +15,7 @@ export const typeDefs = gql`
     description: String
     longitude: Float!
     latitude: Float!
+    image: String
     status: Int
     userId: Int!
   }
@@ -50,6 +51,7 @@ export const typeDefs = gql`
     description: String
     longitude: String
     latitude: String
+    image: String
     status: Int
     userId: Int
     createdAt: Date!

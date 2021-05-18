@@ -45,6 +45,7 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
     },
+    image: DataTypes.STRING,
     status: DataTypes.INTEGER,
     userId: {
       type: DataTypes.FLOAT,

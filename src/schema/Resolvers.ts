@@ -51,7 +51,7 @@ export const resolvers = {
 
   Mutation: {
     async createPlace(_, args, { models }) {
-      const { name, description, longitude, latitude, status, userId } =
+      const { name, description, longitude, latitude, image, status, userId } =
         args?.input
 
       const countUser = await models.User.count({
@@ -66,6 +66,7 @@ export const resolvers = {
         description,
         longitude,
         latitude,
+        image,
         status,
         userId,
       })
