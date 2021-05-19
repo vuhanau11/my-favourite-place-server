@@ -16,35 +16,9 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
     },
-    description: {
-      type: DataTypes.TEXT,
-      validate: {
-        len: {
-          args: [0, 5000],
-          msg: 'Mô tả địa điểm không được quá 5000 ký tự',
-        },
-      },
-    },
-    longitude: {
-      type: DataTypes.FLOAT,
-      validate: {
-        notEmpty: true,
-        len: {
-          args: [0, 255],
-          msg: 'Kinh độ không được quá 255 ký tự',
-        },
-      },
-    },
-    latitude: {
-      type: DataTypes.FLOAT,
-      validate: {
-        notEmpty: true,
-        len: {
-          args: [0, 255],
-          msg: 'Vĩ độ không được quá 255 ký tự',
-        },
-      },
-    },
+    description: DataTypes.TEXT,
+    longitude: DataTypes.FLOAT,
+    latitude: DataTypes.FLOAT,
     image: DataTypes.STRING,
     status: DataTypes.INTEGER,
     userId: {
