@@ -1,12 +1,12 @@
-import { IUser } from '../models/user'
-import { STATUS_PLACE } from '../models/place'
 import Sequelize from 'sequelize'
 import jsonwebtoken from 'jsonwebtoken'
+import { IUser } from '../models/user'
+import { STATUS_PLACE, IPlace } from '../models/place'
 
 const op = Sequelize.Op
 
-const responseOAuth = (user: IUser) => {
-  const token = jsonwebtoken.sign(
+const responseOAuth = async (user: IUser) => {
+  const token = await jsonwebtoken.sign(
     { id: user.id, email: user.email },
     process.env.JWT_SECRET,
     { expiresIn: '1h' }
@@ -16,10 +16,13 @@ const responseOAuth = (user: IUser) => {
 
 export const resolvers = {
   Query: {
-    async me(_, _args: { id: string }, { user, models }) {
-      return await models.User.findByPk(user?.id)
+    async myData(_, __, context: { user; models }) {
+      if (!context.user) {
+        throw new Error('Authorization not found')
+      }
+      return await context.models.User.findByPk(context.user?.id)
     },
-    async getAllUsers(_, _args: IUser, { models }) {
+    async getAllUsers(_, args: IUser, { models }) {
       return models.User.findAll()
     },
     async getDetailUser(_, args: { id: string }, { models }) {
@@ -35,22 +38,97 @@ export const resolvers = {
     },
     async getAllPlaces(_, args, { models }) {
       const { name, page, pageSize } = args?.input
-      return models.Place.findAll({
+      const allPlaces = await models.Place.findAll({
         limit: pageSize,
         offset: pageSize * (page - 1),
         where: {
           name: { [op.like]: `%${name}%` },
           status: STATUS_PLACE.PUBLIC,
         },
+        include: {
+          model: models.User,
+          required: true,
+        },
+      }).then((res: IPlace[]) => {
+        return res.map(async (place: IPlace, index: number) => {
+          const userId = place?.User?.dataValues['id']
+          const userLikePlace = await models.user_like_place.findAll({
+            where: {
+              userId: userId
+            }
+          })
+
+          return Object.assign(
+            {},
+            {
+              id: place.id,
+              name: place.name,
+              description: place.description,
+              longitude: place.longitude,
+              latitude: place.latitude,
+              status: place.status,
+              createdAt: place.createdAt,
+              updatedAt: place.updatedAt,
+              user: Object.assign(
+                {},
+                {
+                  id: userId,
+                  firstName: place?.User?.dataValues['firstName'],
+                  lastName: place?.User?.dataValues['lastName'],
+                  email: place?.User?.dataValues['email'],
+                  avatar: place?.User?.dataValues['avatar'],
+                }
+              ),
+              user_like_place: userLikePlace.map((item) => {
+                return Object.assign(
+                  {},
+                  {
+                    id: item.dataValues['id'],
+                  }
+                )
+              })
+            }
+          )
+        })
       })
+      return allPlaces
     },
     async getDetailPlace(_, args: { id: string }, { models }) {
-      return models.Place.findByPk(args?.id)
+      const placeDatail = await models.Place.findOne({
+        where: { id: args?.id },
+        include: {
+          model: models.User,
+          required: true,
+        },
+      }).then((res: IPlace) => {
+        return Object.assign(
+          {},
+          {
+            id: res.id,
+            name: res.name,
+            description: res.description,
+            longitude: res.longitude,
+            latitude: res.latitude,
+            status: res.status,
+            user: Object.assign(
+              {},
+              {
+                id: res?.User?.dataValues['id'],
+                firstName: res?.User?.dataValues['firstName'],
+                lastName: res?.User?.dataValues['lastName'],
+                email: res?.User?.dataValues['email'],
+                avatar: res?.User?.dataValues['avatar'],
+              }
+            ),
+          }
+        )
+      })
+      return placeDatail
     },
   },
 
   Mutation: {
-    async createPlace(_, args, { models }) {
+    async createPlace(_, args, { user, models }) {
       const { name, description, longitude, latitude, image, status, userId } =
         args?.input
 
@@ -58,7 +136,7 @@ export const resolvers = {
         where: { id: userId },
       })
       if (!countUser) {
-        throw new Error('Khách hàng không hợp lệ')
+        throw new Error('user not invalid')
       }
 
       return models.Place.create({
@@ -80,22 +158,32 @@ export const resolvers = {
           const newUser = await models.User.create({ email, firstName, lastName, avatar })
           return responseOAuth(newUser)
         }
-        return new Promise((resolve, reject) => {
-          models.User.update(
-            { firstName, lastName, avatar },
-            {
-              returning: true,
-              where: { id: user.id }
-            }
-          ).then(() => {
-            resolve(responseOAuth(user))
-          }).catch((error) => {
-            reject(error)
-          })
-        })
+        await models.User.update(
+          { firstName, lastName, avatar },
+          {
+            returning: true,
+            where: { id: user.id },
+          }
+        )
+        return responseOAuth(user)
       } catch (error) {
         throw new Error(error.message)
       }
+    },
+
+    async userLike(
+      _,
+      args: { userId: string; placeId: string },
+      { models }
+    ) {
+      const { userId, placeId } = args
+      const checkUser = await models.user_like_place.findOne({
+        where: { userId, placeId },
+      })
+      if (checkUser) {
+        return checkUser.destroy()
+      }
+      return await models.user_like_place.create({ userId, placeId })
     },
   },
 }

@@ -32,6 +32,7 @@ module.exports = (sequelize, DataTypes) => {
 
   place.associate = (models) => {
     place.belongsTo(models.User, { foreignKey: 'userId' })
+    place.hasMany(models.user_like_place, { foreignKey: 'placeId' })
   }
 
   return place

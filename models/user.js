@@ -10,10 +10,11 @@ module.exports = (sequelize, DataTypes) => {
       unique: true,
     },
     avatar: DataTypes.STRING,
+    token: DataTypes.STRING,
   })
 
   user.associate = (models) => {
-    user.hasMany(models.Place, { foreignKey: 'id' })
+    user.hasMany(models.Place, { foreignKey: 'userId' })
   }
 
   return user

@@ -17,7 +17,7 @@ export const typeDefs = gql`
     latitude: Float!
     image: String
     status: Int
-    userId: Int!
+    userId: Int
   }
 
   input FilterPlaceInput {
@@ -36,6 +36,7 @@ export const typeDefs = gql`
     lastName: String
     email: String
     avatar: String
+    token: String
     createdAt: Date!
     updatedAt: Date!
   }
@@ -53,9 +54,16 @@ export const typeDefs = gql`
     latitude: String
     image: String
     status: Int
-    userId: Int
-    createdAt: Date!
-    updatedAt: Date!
+    user: User!
+    user_like_place: UserLikePlace!
+    createdAt: Date
+    updatedAt: Date
+  }
+
+  type UserLikePlace {
+    id: String
+    placeId: String
+    userId: String
   }
   
   type Query {
@@ -63,12 +71,13 @@ export const typeDefs = gql`
     getDetailUser(id: ID!): User
     getPlaceByUser(input: FilterPlaceByUserInput): [Place!]!
     getAllPlaces(input: FilterPlaceInput): [Place!]!
-    getDetailPlace(id: ID!): Place
-    me: User!
+    getDetailPlace(id: ID!): Place!
+    myData: User!
   }
 
   type Mutation {
     createPlace(input: CreatePlaceInput): Place!
     login(input: LoginInput): OAuth!
+    userLike(userId: String, placeId: String): UserLikePlace!
   }
 `
