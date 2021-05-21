@@ -16,7 +16,7 @@ const responseOAuth = async (user: IUser) => {
 
 export const resolvers = {
   Query: {
-    async myData(_, __, context: { user; models }) {
+    async myData(_, __, context: { user: IUser; models }) {
       if (!context.user) {
         throw new Error('Authorization not found')
       }
