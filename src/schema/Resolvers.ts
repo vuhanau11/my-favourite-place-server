@@ -16,12 +16,13 @@ const responseOAuth = async (user: IUser) => {
 
 export const resolvers = {
   Query: {
-    async myData(_, __, context: { user: IUser; models }) {
+    async myData(_, __, context: { user, models }) {
       if (!context.user) {
         throw new Error('Authorization not found')
       }
       return await context.models.User.findByPk(context.user?.id)
     },
+
     async getAllUsers(_, args: IUser, { models }) {
       return models.User.findAll()
     },
@@ -91,11 +92,11 @@ export const resolvers = {
         )
       })
     },
-    async getDetailPlace(_, args: { id: string }, { models }) {
-      const placeDatail = await models.Place.findOne({
+    async getDetailPlace(_, args: { id: string }, context: { user, models }) {
+      const placeDatail = await context.models.Place.findOne({
         where: { id: args?.id },
         include: {
-          model: models.User,
+          model: context?.models?.User,
           required: true,
         },
       })
@@ -151,7 +152,12 @@ export const resolvers = {
         const { email, firstName, lastName, avatar } = args?.input
         const user = await models?.User?.findOne({ where: { email } })
         if (!user) {
-          const newUser = await models.User.create({ email, firstName, lastName, avatar })
+          const newUser = await models.User.create({
+            email,
+            firstName,
+            lastName,
+            avatar,
+          })
           return responseOAuth(newUser)
         }
         await models.User.update(

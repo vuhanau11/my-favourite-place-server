@@ -22,7 +22,7 @@ const getUser = (token: string) => {
 const server = new ApolloServer({
   typeDefs, resolvers, context: ({ req }) => {
     const token = req.get('authorization') || ''
-    const user = getUser(token.replace('Bearer', ''))
+    const user = getUser(token.replace('Bearer ', ''))
 
     return { user, models }
   }
