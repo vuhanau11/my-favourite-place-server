@@ -49,49 +49,47 @@ export const resolvers = {
           model: models.User,
           required: true,
         },
-      }).then((res: IPlace[]) => {
-        return res.map(async (place: IPlace, index: number) => {
-          const userId = place?.User?.dataValues['id']
-          const userLikePlace = await models.user_like_place.findAll({
-            where: {
-              userId: userId
-            }
-          })
+      })
+      return allPlaces.map(async (place: IPlace, index: number) => {
+        const userId = place?.User?.dataValues['id']
+        const userLikePlace = await models.user_like_place.findAll({
+          where: {
+            userId: userId
+          }
+        })
 
-          return Object.assign(
-            {},
-            {
-              id: place.id,
-              name: place.name,
-              description: place.description,
-              longitude: place.longitude,
-              latitude: place.latitude,
-              status: place.status,
-              createdAt: place.createdAt,
-              updatedAt: place.updatedAt,
-              user: Object.assign(
+        return Object.assign(
+          {},
+          {
+            id: place.id,
+            name: place.name,
+            description: place.description,
+            longitude: place.longitude,
+            latitude: place.latitude,
+            status: place.status,
+            createdAt: place.createdAt,
+            updatedAt: place.updatedAt,
+            user: Object.assign(
+              {},
+              {
+                id: userId,
+                firstName: place?.User?.dataValues['firstName'],
+                lastName: place?.User?.dataValues['lastName'],
+                email: place?.User?.dataValues['email'],
+                avatar: place?.User?.dataValues['avatar'],
+              }
+            ),
+            user_like_place: userLikePlace.map((item) => {
+              return Object.assign(
                 {},
                 {
-                  id: userId,
-                  firstName: place?.User?.dataValues['firstName'],
-                  lastName: place?.User?.dataValues['lastName'],
-                  email: place?.User?.dataValues['email'],
-                  avatar: place?.User?.dataValues['avatar'],
+                  id: item.dataValues['id'],
                 }
-              ),
-              user_like_place: userLikePlace.map((item) => {
-                return Object.assign(
-                  {},
-                  {
-                    id: item.dataValues['id'],
-                  }
-                )
-              })
-            }
-          )
-        })
+              )
+            })
+          }
+        )
       })
-      return allPlaces
     },
     async getDetailPlace(_, args: { id: string }, { models }) {
       const placeDatail = await models.Place.findOne({
@@ -100,30 +98,28 @@ export const resolvers = {
           model: models.User,
           required: true,
         },
-      }).then((res: IPlace) => {
-        return Object.assign(
-          {},
-          {
-            id: res.id,
-            name: res.name,
-            description: res.description,
-            longitude: res.longitude,
-            latitude: res.latitude,
-            status: res.status,
-            user: Object.assign(
-              {},
-              {
-                id: res?.User?.dataValues['id'],
-                firstName: res?.User?.dataValues['firstName'],
-                lastName: res?.User?.dataValues['lastName'],
-                email: res?.User?.dataValues['email'],
-                avatar: res?.User?.dataValues['avatar'],
-              }
-            ),
-          }
-        )
       })
-      return placeDatail
+      return Object.assign(
+        {},
+        {
+          id: placeDatail.id,
+          name: placeDatail.name,
+          description: placeDatail.description,
+          longitude: placeDatail.longitude,
+          latitude: placeDatail.latitude,
+          status: placeDatail.status,
+          user: Object.assign(
+            {},
+            {
+              id: placeDatail?.User?.dataValues['id'],
+              firstName: placeDatail?.User?.dataValues['firstName'],
+              lastName: placeDatail?.User?.dataValues['lastName'],
+              email: placeDatail?.User?.dataValues['email'],
+              avatar: placeDatail?.User?.dataValues['avatar'],
+            }
+          ),
+        }
+      )
     },
   },
 
